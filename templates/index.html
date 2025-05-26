@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>İlaç Bilgi Chatbot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="chat-container">
+  <h2>İlaç Bilgi Chatbot</h2>
+  <div id="chat-box"></div>
+  <div style="display:flex;">
+    <input type="text" id="user-input" placeholder="İlaç adını yazınız..." autocomplete="off">
+    <button id="send-btn">Gönder</button>
+  </div>
+</div>
+  <script>
+    document.getElementById("send-btn").addEventListener("click", sendMessage);
+
+    async function sendMessage() {
+      const inputField = document.getElementById("user-input");
+      const message = inputField.value.trim();
+      if (!message) return alert("Lütfen bir ilaç adı yazın.");
+
+      // Kullanıcı mesajını chat kutusuna ekle
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML += `<div class="user-msg"><strong>Sen:</strong> ${message}</div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const res = await fetch("/get", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ msg: message })
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        // Bot cevabını chat kutusuna ekle
+        chatBox.innerHTML += `<div class="bot-msg"><strong>Bot:</strong> ${data.reply}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        inputField.value = "";
+        inputField.focus();
+
+      } catch (error) {
+        alert("Sunucuya bağlanırken hata oluştu: " + error.message);
+        console.error("Fetch hatası:", error);
+      }
+    }
+  </script>
+</body>
+</html>
